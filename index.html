@@ -300,9 +300,9 @@
                         <td class="number">51</td>
                         <td class="number">840</td>
                         <td>紫鸟全部接口自动化（891个，包含紫鸟ent、紫鸟oss、紫鸟sip）</td>
-                        <td class="number"><span class="efficiency-before">480</span></td>
+                        <td class="number"><span class="efficiency-before">120</span></td>
                         <td class="number"><span class="efficiency-after">10</span></td>
-                        <td class="number"><span class="efficiency-percent">98%</span></td>
+                        <td class="number"><span class="efficiency-percent">91.67%</span></td>
                         <td>分钟</td>
                         <td><span class="badge badge-primary">运行中</span></td>
                     </tr>
@@ -746,7 +746,7 @@
             },
             xAxis: {
                 type: 'category',
-                data: ['ERP接口回归\n(分钟)', '服务端迁移/全量接口接口回归\n(分钟)', '本地网关回归\n(分钟)', '密码填充回归\n(分钟)', '白名单检测\n(天)'],
+                data: ['紫鸟接口回归\n(分钟)', 'ERP接口回归\n(分钟)', '服务端迁移/全量接口接口回归\n(分钟)', '本地网关回归\n(分钟)', '密码填充回归\n(分钟)', '白名单检测\n(天)'],
                 axisLabel: {
                     fontSize: 11
                 }
@@ -768,7 +768,7 @@
                         position: 'top',
                         formatter: '{c}'
                     },
-                    data: [180, 480, 30, 30, 15]
+                    data: [120, 120, 480, 30, 30, 15]
                 },
                 {
                     name: '优化后',
@@ -782,7 +782,7 @@
                         position: 'top',
                         formatter: '{c}'
                     },
-                    data: [5, 120, 3, 3, 2]
+                    data: [10, 5, 120, 3, 3, 2]
                 }
             ]
         };
