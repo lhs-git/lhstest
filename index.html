@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自动化脚本统计报表</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card .label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-card .unit {
+            font-size: 14px;
+            color: #999;
+            margin-left: 4px;
+        }
+        
+        .chart-section {
+            padding: 30px;
+            background: #fafafa;
+        }
+        
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .chart-small {
+            height: 300px;
+        }
+        
+        .table-section {
+            padding: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .number {
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-primary {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .badge-warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .efficiency-before {
+            color: #999;
+            text-decoration: line-through;
+        }
+        
+        .efficiency-after {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .efficiency-percent {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .footer {
+            padding: 20px 30px;
+            background: #fafafa;
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>自动化脚本统计报表</h1>
+            <div class="subtitle">Automation Scripts Statistics Report</div>
+        </div>
+        
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="label">接口自动化脚本总数</div>
+                <div class="value">1,035<span class="unit">个</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">其他自动化工具总数</div>
+                <div class="value">18<span class="unit">个</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">总自动化脚本/工具数</div>
+                <div class="value">1,053<span class="unit">个</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">平均效率提升</div>
+                <div class="value">60<span class="unit">%</span></div>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <div class="chart-container">
+                <div class="chart-card">
+                    <div class="chart-title">接口自动化脚本分布</div>
+                    <div id="chart1" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">自动化脚本总体统计</div>
+                    <div id="chart2" class="chart"></div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-card">
+                    <div class="chart-title">接口自动化详细统计</div>
+                    <div id="chart3" class="chart"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">效率提升百分比统计</div>
+                    <div id="chart4" class="chart"></div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-title">时间效率提升对比</div>
+                    <div id="chart5" class="chart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-section">
+            <h2 class="section-title">接口自动化脚本统计</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>项目名称</th>
+                        <th style="text-align: right;">接口数量</th>
+                        <th>说明</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>紫鸟接口自动化</strong></td>
+                        <td class="number">874</td>
+                        <td>其中包含Token鉴权837个、数据加密鉴权872个复用接口</td>
+                        <td><span class="badge badge-primary">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>开放平台ERP接口</strong></td>
+                        <td class="number">161</td>
+                        <td>已部署Jenkins用于回归测试</td>
+                        <td><span class="badge badge-primary">运行中</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h2 class="section-title">其他自动化工具统计</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>序号</th>
+                        <th>工具名称</th>
+                        <th>类型</th>
+                        <th>用途说明</th>
+                        <th>效率提升</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="number">1</td>
+                        <td><strong>UI自动化框架</strong></td>
+                        <td>UI测试</td>
+                        <td>目前有三套：1套给linkfox AI项目（他们以此为基础搭建了自己的自动化），还有2套自然语言的已落地集成到智能测试平台</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">2</td>
+                        <td><strong>V5/V6启动自动化</strong></td>
+                        <td>功能测试</td>
+                        <td>URL启动自动化测试和webdriver能力回归，从2小时缩减到2分钟</td>
+                        <td><span class="efficiency-percent">98%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">3</td>
+                        <td><strong>性能/稳定性测试脚本</strong></td>
+                        <td>性能测试</td>
+                        <td>适用于协议、中继等性能测试、稳定性测试，生成xray协议config工具</td>
+                        <td><span class="efficiency-percent">50%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">4</td>
+                        <td><strong>AI提问采集脚本</strong></td>
+                        <td>AI测试</td>
+                        <td>用于跑AI客服助手，节省人力提问与采集回答的时间</td>
+                        <td><span class="efficiency-percent">60%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">5</td>
+                        <td><strong>进程采集工具</strong></td>
+                        <td>工具</td>
+                        <td>自动采集记录紫鸟进程、envkit、插件、内核等，每次节省8小时</td>
+                        <td><span class="efficiency-percent">显著</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">6</td>
+                        <td><strong>接口自动化回归添加工具</strong></td>
+                        <td>工具</td>
+                        <td>快速编写接口自动化脚本，任何测试人员都可使用</td>
+                        <td><span class="efficiency-percent">60%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">7</td>
+                        <td><strong>本地网关回归店铺协议自动化</strong></td>
+                        <td>功能测试</td>
+                        <td>本地网关版本迭代时跑自动化回归，从30分钟/人缩到3分钟/人</td>
+                        <td><span class="efficiency-percent">90%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">8</td>
+                        <td><strong>内核获取填充密码回归脚本</strong></td>
+                        <td>安全测试</td>
+                        <td>回归内核修改后自动填充密码的安全性测试，从30分钟/人缩到3分钟/人</td>
+                        <td><span class="efficiency-percent">90%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">9</td>
+                        <td><strong>紫鸟自动化检测网址加白系统</strong></td>
+                        <td>工具</td>
+                        <td>配合AI agent接口检测白名单，跑2W域名从15天缩到2天</td>
+                        <td><span class="efficiency-percent">87%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">10</td>
+                        <td><strong>接口自动化框架优化</strong></td>
+                        <td>工具</td>
+                        <td>支持多环境并发执行，从20分钟提升到10分钟</td>
+                        <td><span class="efficiency-percent">50%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">11</td>
+                        <td><strong>紫鸟店铺内代码生成器</strong></td>
+                        <td>工具</td>
+                        <td>自动将操作转化成webdriver代码，无需指定人员编写调试</td>
+                        <td><span class="efficiency-percent">60%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">12</td>
+                        <td><strong>紫鸟客户端加载性能自动化测试脚本</strong></td>
+                        <td>性能测试</td>
+                        <td>V5和V6性能对比，自动计时并生成测试报告</td>
+                        <td><span class="efficiency-percent">70%</span></td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">13</td>
+                        <td><strong>加解密服务</strong></td>
+                        <td>工具</td>
+                        <td>支持云资源和紫鸟测试接口的加解密处理，统一安全处理</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">14</td>
+                        <td><strong>chime视频会议检测与重连</strong></td>
+                        <td>运维工具</td>
+                        <td>自动检测会议连接情况，断开后自动化重连，飞书通知</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">15</td>
+                        <td><strong>showcase用例生成插件</strong></td>
+                        <td>工具</td>
+                        <td>自动提取需求文档内容，整理成文档并生成showcase测试用例</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">16</td>
+                        <td><strong>Udesk用户咨询问题清洗</strong></td>
+                        <td>工具</td>
+                        <td>作为客服AI助手的测试问题集，自动提取问题用于训练AI助手</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">17</td>
+                        <td><strong>Udesk问题统计同步到飞书</strong></td>
+                        <td>工具</td>
+                        <td>每日自动收集汇总问题数到飞书，系统历史5年数据下载</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                    <tr>
+                        <td class="number">18</td>
+                        <td><strong>紫鸟管理系统回归UI自动化 V5、V6</strong></td>
+                        <td>UI测试</td>
+                        <td>紫鸟管理系统回归UI自动化，支持V5和V6版本</td>
+                        <td>-</td>
+                        <td><span class="badge badge-success">运行中</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h2 class="section-title">效率提升统计</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>项目名称</th>
+                        <th>优化前</th>
+                        <th>优化后</th>
+                        <th>效率提升</th>
+                        <th>单位</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>紫鸟接口回归</strong></td>
+                        <td class="number"><span class="efficiency-before">120</span></td>
+                        <td class="number"><span class="efficiency-after">10</span></td>
+                        <td class="number"><span class="efficiency-percent">92%</span></td>
+                        <td>分钟</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ERP接口回归</strong></td>
+                        <td class="number"><span class="efficiency-before">180</span></td>
+                        <td class="number"><span class="efficiency-after">5</span></td>
+                        <td class="number"><span class="efficiency-percent">97%</span></td>
+                        <td>分钟</td>
+                    </tr>
+                    <tr>
+                        <td><strong>服务端迁移/全量接口接口回归</strong></td>
+                        <td class="number"><span class="efficiency-before">480</span></td>
+                        <td class="number"><span class="efficiency-after">120</span></td>
+                        <td class="number"><span class="efficiency-percent">75%</span></td>
+                        <td>分钟</td>
+                    </tr>
+                    <tr>
+                        <td><strong>本地网关回归</strong></td>
+                        <td class="number"><span class="efficiency-before">30</span></td>
+                        <td class="number"><span class="efficiency-after">3</span></td>
+                        <td class="number"><span class="efficiency-percent">90%</span></td>
+                        <td>分钟/人</td>
+                    </tr>
+                    <tr>
+                        <td><strong>密码填充回归</strong></td>
+                        <td class="number"><span class="efficiency-before">30</span></td>
+                        <td class="number"><span class="efficiency-after">3</span></td>
+                        <td class="number"><span class="efficiency-percent">90%</span></td>
+                        <td>分钟/人</td>
+                    </tr>
+                    <tr>
+                        <td><strong>白名单检测</strong></td>
+                        <td class="number"><span class="efficiency-before">15</span></td>
+                        <td class="number"><span class="efficiency-after">2</span></td>
+                        <td class="number"><span class="efficiency-percent">87%</span></td>
+                        <td>天</td>
+                    </tr>
+                    <tr>
+                        <td><strong>接口测试工具</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">50%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                    <tr>
+                        <td><strong>协议中继回归</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">50%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                    <tr>
+                        <td><strong>AI提问采集</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">60%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                    <tr>
+                        <td><strong>接口框架优化</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">50%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                    <tr>
+                        <td><strong>代码生成器</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">60%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                    <tr>
+                        <td><strong>性能测试</strong></td>
+                        <td class="number">-</td>
+                        <td class="number">-</td>
+                        <td class="number"><span class="efficiency-percent">70%</span></td>
+                        <td>效率提升</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>数据统计时间：2025年 | 自动化脚本统计报表</p>
+        </div>
+    </div>
+    
+    <script>
+        // 图表1: 接口自动化脚本分布（饼图）
+        var chart1 = echarts.init(document.getElementById('chart1'));
+        var option1 = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                top: 'middle'
+            },
+            series: [
+                {
+                    name: '接口数量',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        formatter: '{b}\n{c}个 ({d}%)'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 16,
+                            fontWeight: 'bold'
+                        }
+                    },
+                    data: [
+                        { value: 874, name: '紫鸟接口自动化', itemStyle: { color: '#667eea' } },
+                        { value: 161, name: '开放平台ERP接口', itemStyle: { color: '#764ba2' } }
+                    ]
+                }
+            ]
+        };
+        chart1.setOption(option1);
+        
+        // 图表2: 自动化脚本总体统计（柱状图）
+        var chart2 = echarts.init(document.getElementById('chart2'));
+        var option2 = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['接口自动化\n脚本总数', '其他自动化\n工具总数'],
+                axisLabel: {
+                    fontSize: 12
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '数量'
+            },
+            series: [
+                {
+                    name: '数量',
+                    type: 'bar',
+                    barWidth: '60%',
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#667eea' },
+                            { offset: 1, color: '#764ba2' }
+                        ]),
+                        borderRadius: [4, 4, 0, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                    },
+                    data: [1035, 15]
+                }
+            ]
+        };
+        chart2.setOption(option2);
+        
+        // 图表3: 接口自动化详细统计（横向柱状图）
+        var chart3 = echarts.init(document.getElementById('chart3'));
+        var option3 = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                name: '接口数量'
+            },
+            yAxis: {
+                type: 'category',
+                data: ['开放平台ERP接口', '紫鸟接口自动化']
+            },
+            series: [
+                {
+                    name: '接口数量',
+                    type: 'bar',
+                    itemStyle: {
+                        color: function(params) {
+                            var colors = ['#667eea', '#764ba2'];
+                            return colors[params.dataIndex];
+                        },
+                        borderRadius: [0, 4, 4, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}个'
+                    },
+                    data: [161, 874]
+                }
+            ]
+        };
+        chart3.setOption(option3);
+        
+        // 图表4: 效率提升百分比统计（横向柱状图）
+        var chart4 = echarts.init(document.getElementById('chart4'));
+        var option4 = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                name: '效率提升 (%)',
+                max: 100
+            },
+            yAxis: {
+                type: 'category',
+                data: ['性能测试', '代码生成器', 'AI提问采集', '接口框架优化', '协议中继回归', '接口测试工具']
+            },
+            series: [
+                {
+                    name: '效率提升',
+                    type: 'bar',
+                    itemStyle: {
+                        color: function(params) {
+                            var value = params.value;
+                            if (value >= 70) return '#52c41a';
+                            if (value >= 60) return '#1890ff';
+                            return '#faad14';
+                        },
+                        borderRadius: [0, 4, 4, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: '{c}%'
+                    },
+                    data: [70, 60, 60, 50, 50, 50]
+                }
+            ]
+        };
+        chart4.setOption(option4);
+        
+        // 图表5: 时间效率提升对比（分组柱状图）
+        var chart5 = echarts.init(document.getElementById('chart5'));
+        var option5 = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['优化前', '优化后'],
+                top: 10
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['紫鸟接口回归\n(分钟)', 'ERP接口回归\n(分钟)', '服务端迁移/全量接口接口回归\n(分钟)', '本地网关回归\n(分钟)', '密码填充回归\n(分钟)', '白名单检测\n(天)'],
+                axisLabel: {
+                    fontSize: 11
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: '时间'
+            },
+            series: [
+                {
+                    name: '优化前',
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#ff7875',
+                        borderRadius: [4, 4, 0, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                    },
+                    data: [120, 180, 480, 30, 30, 15]
+                },
+                {
+                    name: '优化后',
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#52c41a',
+                        borderRadius: [4, 4, 0, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                    },
+                    data: [10, 5, 120, 3, 3, 2]
+                }
+            ]
+        };
+        chart5.setOption(option5);
+        
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            chart1.resize();
+            chart2.resize();
+            chart3.resize();
+            chart4.resize();
+            chart5.resize();
+        });
+        
+        // 数字动画
+        function animateValue(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                const originalText = element.innerHTML;
+                const unit = originalText.match(/<span class="unit">.*?<\/span>/)?.[0] || '';
+                element.innerHTML = current.toLocaleString() + unit;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.innerHTML = originalText;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // 页面加载时动画显示数字
+        window.addEventListener('load', function() {
+            const statValues = document.querySelectorAll('.stat-card .value');
+            statValues.forEach(card => {
+                const text = card.textContent;
+                const number = parseInt(text.replace(/[^0-9]/g, ''));
+                if (number && number > 0) {
+                    animateValue(card, 0, number, 1000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
